@@ -1,0 +1,21 @@
+FROM rocm/dev-ubuntu-22.04:6.1.1-complete
+
+ARG PORT
+ARG BEAM_SIZE
+ARG NUM_OF_THREADS
+ARG MODEL
+
+RUN apt-get -y update && apt-get -y install cmake git libclblast-dev wget
+
+RUN git clone https://github.com/ggerganov/whisper.cpp
+WORKDIR "/whisper.cpp"
+
+RUN cmake -B build -DWHISPER_CLBLAST=ON
+RUN cmake --build build -j --config Release
+
+WORKDIR /
+RUN wget "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${MODEL}?download=true" -O "${MODEL}"
+
+EXPOSE ${PORT}
+
+CMD ./whisper.cpp/build/bin/server -debug -m ./${MODEL} --host 0.0.0.0 --port ${PORT} -bs ${BEAM_SIZE} -t ${NUM_OF_THREADS}

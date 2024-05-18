@@ -1,0 +1,44 @@
+---
+
+version: '3.5'
+services:
+  whisper-cpp-server:
+    networks:
+      - whisper-net
+    container_name: whisper-cpp-server
+    restart: unless-stopped
+    ports: 
+      - ${PORT}:8910
+    build:
+      context: .
+      dockerfile: DockerfileWhisperCPP
+      args:
+        PORT: ${PORT}
+        BEAM_SIZE: ${BEAM_SIZE}
+        NUM_OF_THREADS: ${NUM_OF_THREADS}
+        MODEL: ${MODEL}
+    env_file:
+      - .env
+    devices:
+        - /dev/kfd
+        - /dev/dri
+    group_add:
+        - video
+    security_opt:
+      - seccomp:unconfined
+
+  wyoming-whisper-api-client:
+    container_name: wyoming-whisper-api-client
+    networks:
+      - whisper-net
+    restart: unless-stopped
+    ports: 
+      - 7891:7891
+    build:
+      context: .
+      dockerfile: DockerfileWyomingWhisperApiClient
+    env_file:
+      - .env
+
+networks:
+  whisper-net:
